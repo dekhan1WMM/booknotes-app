@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Book Notes">
+<meta name="theme-color" content="#1a1a1a">
+<title>Book Notes</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23262626'/%3E%3Cpath d='M52 44h50a24 24 0 0124 24v72a20 20 0 00-20-20H52z' fill='%23e8e0d0'/%3E%3Cpath d='M128 44H78a24 24 0 00-24 24v72a20 20 0 0120-20h54z' fill='%23c9bfa8'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#faf9f7; --surface:#ffffff; --surface-2:#f2efe9; --line:#e2ddd3;
+  --text:#22201c; --muted:#7d7668; --accent:#8a6f3f; --accent-soft:#f0e8d8;
+  --danger:#a33a2a; --ok:#3f7d4f; --radius:14px;
+  --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#16150f; --surface:#201e18; --surface-2:#2a2720; --line:#38342b;
+    --text:#ece7dc; --muted:#9a9284; --accent:#d3b271; --accent-soft:#2f2a1e;
+    --danger:#e08573; --ok:#7fbf90;
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{
+  background:var(--bg); color:var(--text);
+  font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",system-ui,sans-serif;
+  overscroll-behavior-y:none;
+}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none}
+a{color:var(--accent)}
+
+/* ---------- chrome ---------- */
+#top{
+  position:sticky;top:0;z-index:20;background:var(--bg);
+  padding:calc(var(--safe-t) + 10px) 16px 10px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;min-height:52px;
+}
+#top h1{font-size:17px;font-weight:640;margin:0;flex:1;letter-spacing:-.01em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{
+  width:36px;height:36px;border-radius:10px;display:grid;place-items:center;
+  color:var(--muted);flex:0 0 auto;font-size:19px;
+}
+.iconbtn:active{background:var(--surface-2)}
+.iconbtn[hidden],#fab[hidden]{display:none}
+.iconbtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;
+  stroke-linecap:round;stroke-linejoin:round}
+#status{font-size:11.5px;color:var(--muted);flex:0 0 auto;display:flex;align-items:center;gap:5px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--ok);flex:0 0 auto}
+.dot.warn{background:var(--accent)}
+.dot.err{background:var(--danger)}
+main{padding:16px 16px calc(var(--safe-b) + 96px);max-width:720px;margin:0 auto}
+.view{display:none}
+.view.on{display:block}
+
+/* ---------- shared ---------- */
+.card{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  padding:14px 15px;margin-bottom:10px;display:block;width:100%;text-align:left;
+}
+.card:active{background:var(--surface-2)}
+label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);
+  margin:0 0 6px;letter-spacing:.02em;text-transform:uppercase}
+input[type=text],textarea,select{
+  width:100%;background:var(--surface);border:1px solid var(--line);
+  border-radius:11px;padding:11px 13px;outline:none;resize:vertical;
+}
+input[type=text]:focus,textarea:focus{border-color:var(--accent)}
+textarea{min-height:76px;line-height:1.5}
+.field{margin-bottom:16px}
+.row{display:flex;gap:10px}
+.row>*{flex:1;min-width:0}
+.btn{
+  background:var(--accent);color:#fff;border-radius:12px;padding:13px 18px;
+  font-weight:620;width:100%;display:block;text-align:center;
+}
+@media (prefers-color-scheme:dark){.btn{color:#191710}}
+.btn:active{filter:brightness(.92)}
+.btn.ghost{background:var(--surface);color:var(--text);border:1px solid var(--line)}
+.btn.sm{padding:9px 14px;font-size:14px;width:auto;display:inline-block}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.empty{text-align:center;color:var(--muted);padding:48px 20px;font-size:14.5px;line-height:1.7}
+.hint{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.5}
+.tag{
+  display:inline-block;background:var(--accent-soft);color:var(--accent);
+  border-radius:99px;padding:2px 9px;font-size:12px;font-weight:600;margin:3px 4px 0 0;
+}
+.err{color:var(--danger);font-size:13.5px;margin-top:10px;white-space:pre-wrap}
+
+/* ---------- books ---------- */
+.booktitle{font-weight:640;font-size:16px;letter-spacing:-.01em}
+.bookmeta{font-size:13px;color:var(--muted);margin-top:3px}
+#fab{
+  position:fixed;right:16px;bottom:calc(var(--safe-b) + 20px);z-index:30;
+  width:58px;height:58px;border-radius:50%;background:var(--accent);color:#fff;
+  font-size:28px;display:grid;place-items:center;
+  box-shadow:0 6px 20px rgba(0,0,0,.22);
+}
+@media (prefers-color-scheme:dark){#fab{color:#191710}}
+
+/* ---------- entries ---------- */
+.entry{border-left:2.5px solid var(--line);padding:2px 0 2px 14px;margin:0 0 20px}
+.entry .when{font-size:12px;color:var(--muted);letter-spacing:.02em}
+.entry blockquote{
+  margin:8px 0 0;padding:0;font-size:15.5px;line-height:1.62;
+  font-style:italic;color:var(--text);white-space:pre-wrap;
+}
+.entry .thought{margin-top:9px;white-space:pre-wrap;font-size:15px;line-height:1.6}
+.entry .tags{margin-top:7px}
+.pill{
+  display:inline-block;font-size:11.5px;font-weight:650;color:var(--accent);
+  background:var(--accent-soft);border-radius:6px;padding:1px 7px;margin-right:6px;
+}
+.srcbook{font-size:12.5px;color:var(--muted);font-weight:600;margin-bottom:2px}
+
+/* ---------- setup ---------- */
+.step{counter-increment:s;position:relative;padding-left:30px;margin-bottom:14px;font-size:14px;line-height:1.6}
+.step::before{
+  content:counter(s);position:absolute;left:0;top:1px;width:20px;height:20px;
+  background:var(--accent-soft);color:var(--accent);border-radius:50%;
+  font-size:11.5px;font-weight:700;display:grid;place-items:center;
+}
+#setupSteps{counter-reset:s}
+code{background:var(--surface-2);padding:1.5px 5px;border-radius:5px;font-size:13px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all}
+.divider{height:1px;background:var(--line);margin:22px 0}
+h2.sec{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);
+  margin:26px 0 10px;font-weight:650}
+#toast{
+  position:fixed;left:50%;transform:translateX(-50%) translateY(20px);
+  bottom:calc(var(--safe-b) + 92px);background:var(--text);color:var(--bg);
+  padding:10px 18px;border-radius:99px;font-size:14px;font-weight:600;z-index:60;
+  opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;max-width:88vw;text-align:center;
+}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid var(--line);
+  border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div id="top">
+  <button class="iconbtn" id="backBtn" title="Back" hidden>
+    <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <h1 id="title">Book Notes</h1>
+  <button class="iconbtn" id="searchBtn" title="Search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
+  <button class="iconbtn" id="gearBtn" title="Settings">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.6 1.6 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-1.8-.3 1.6 1.6 0 00-1 1.5v.2a2 2 0 11-4 0v-.1a1.6 1.6 0 00-1-1.5 1.6 1.6 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.6 1.6 0 00.3-1.8 1.6 1.6 0 00-1.5-1H3a2 2 0 110-4h.1a1.6 1.6 0 001.5-1 1.6 1.6 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.6 1.6 0 001.8.3H9a1.6 1.6 0 001-1.5V3a2 2 0 114 0v.1a1.6 1.6 0 001 1.5 1.6 1.6 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.6 1.6 0 00-.3 1.8V9a1.6 1.6 0 001.5 1h.2a2 2 0 110 4h-.1a1.6 1.6 0 00-1.5 1z"/></svg></button>
+  <div id="status"><span class="dot" id="dot"></span><span id="statusTxt"></span></div>
+</div>
+
+<main>
+
+<!-- ============ SETUP ============ -->
+<section class="view" id="v-setup">
+  <p class="small muted" style="margin-top:0">
+    Your notes are saved as Markdown files in a private GitHub repository, which
+    doubles as your Obsidian vault. Nothing is stored on any server of mine — the
+    token below stays in this browser.
+  </p>
+
+  <h2 class="sec">Connection</h2>
+  <div class="field">
+    <label for="f-owner">GitHub username</label>
+    <input type="text" id="f-owner" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="e.g. kdpark">
+  </div>
+  <div class="field">
+    <label for="f-repo">Repository name</label>
+    <input type="text" id="f-repo" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="e.g. book-notes">
+  </div>
+  <div class="field">
+    <label for="f-token">Fine-grained access token</label>
+    <input type="text" id="f-token" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="github_pat_...">
+    <div class="hint">Needs <b>Contents: Read and write</b> on this repository only.</div>
+  </div>
+  <div class="field">
+    <label for="f-folder">Folder inside the repo</label>
+    <input type="text" id="f-folder" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Books">
+    <div class="hint">Leave as <code>Books</code> unless you want them elsewhere in the vault.</div>
+  </div>
+  <button class="btn" id="testBtn">Connect</button>
+  <div class="err" id="setupErr"></div>
+
+  <div class="divider"></div>
+  <h2 class="sec">How to get these</h2>
+  <div id="setupSteps">
+    <div class="step">Create a <b>private</b> repository on GitHub — <code>github.com/new</code>. Name it <code>book-notes</code> and tick “Add a README file”.</div>
+    <div class="step">Go to <code>github.com/settings/personal-access-tokens</code> and generate a new fine-grained token.</div>
+    <div class="step">Under <b>Repository access</b> choose “Only select repositories” and pick <code>book-notes</code>.</div>
+    <div class="step">Under <b>Permissions → Repository permissions</b>, set <b>Contents</b> to <b>Read and write</b>.</div>
+    <div class="step">Copy the token (starts with <code>github_pat_</code>) and paste it above.</div>
+  </div>
+</section>
+
+<!-- ============ BOOKS ============ -->
+<section class="view" id="v-books">
+  <div id="bookList"></div>
+</section>
+
+<!-- ============ NEW BOOK ============ -->
+<section class="view" id="v-newbook">
+  <div class="field">
+    <label for="f-btitle">Title</label>
+    <input type="text" id="f-btitle" placeholder="Book title">
+  </div>
+  <div class="field">
+    <label for="f-bauthor">Author</label>
+    <input type="text" id="f-bauthor" placeholder="Optional">
+  </div>
+  <button class="btn" id="createBookBtn">Add book</button>
+  <div class="err" id="newbookErr"></div>
+</section>
+
+<!-- ============ CAPTURE ============ -->
+<section class="view" id="v-capture">
+  <div class="field">
+    <label for="f-quote">Quote / passage</label>
+    <textarea id="f-quote" placeholder="The line you want to keep…"></textarea>
+  </div>
+  <div class="field">
+    <label for="f-thought">My thought</label>
+    <textarea id="f-thought" placeholder="What it made you think…"></textarea>
+  </div>
+  <div class="row field">
+    <div>
+      <label for="f-page">Page / location</label>
+      <input type="text" id="f-page" placeholder="p.47">
+    </div>
+    <div>
+      <label for="f-tags">Tags</label>
+      <input type="text" id="f-tags" autocapitalize="off" placeholder="memory, bias">
+    </div>
+  </div>
+  <div id="tagSuggest" style="margin:-8px 0 16px"></div>
+  <button class="btn" id="saveBtn">Save note</button>
+  <div class="err" id="capErr"></div>
+</section>
+
+<!-- ============ BOOK DETAIL ============ -->
+<section class="view" id="v-book">
+  <div id="bookHead"></div>
+  <div id="entryList"></div>
+</section>
+
+<!-- ============ SEARCH ============ -->
+<section class="view" id="v-search">
+  <div class="field">
+    <input type="text" id="f-search" placeholder="Search quotes, thoughts, #tags…" autocapitalize="off">
+    <div class="hint">Searches every book. Prefix with <code>#</code> to match a tag.</div>
+  </div>
+  <div id="searchResults"></div>
+</section>
+
+<!-- ============ SETTINGS ============ -->
+<section class="view" id="v-settings">
+  <div class="card" style="margin-bottom:16px">
+    <div class="small muted">Repository</div>
+    <div id="s-repo" style="font-weight:620;margin-top:2px"></div>
+    <div class="small muted" style="margin-top:8px">Folder</div>
+    <div id="s-folder" style="font-weight:620;margin-top:2px"></div>
+  </div>
+  <div id="s-queue"></div>
+  <button class="btn ghost" id="refreshBtn" style="margin-bottom:10px">Refresh from GitHub</button>
+  <button class="btn ghost" id="editConnBtn" style="margin-bottom:10px">Edit connection</button>
+  <button class="btn ghost" id="logoutBtn" style="color:var(--danger)">Forget token on this device</button>
+  <p class="hint" style="margin-top:18px">
+    Notes live in your repo as one Markdown file per book. Open that repo as an
+    Obsidian vault and everything appears as normal notes.
+  </p>
+</section>
+
+</main>
+
+<button id="fab" hidden>+</button>
+<div id="toast"></div>
+
+<script>
+"use strict";
+/* ================= config & storage ================= */
+const LS = {
+  cfg:'bn.cfg', queue:'bn.queue', cache:'bn.cache', tags:'bn.tags'
+};
+const load = (k,d) => { try{ return JSON.parse(localStorage.getItem(k)) ?? d; }catch(e){ return d; } };
+const save = (k,v) => { try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} };
+
+let cfg   = load(LS.cfg, null);
+let queue = load(LS.queue, []);
+let cache = load(LS.cache, {});   // { "filename.md": {sha, text, title, author, count, last} }
+
+/* ================= utils ================= */
+const $  = id => document.getElementById(id);
+const esc = s => String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function b64encode(str){
+  const bytes = new TextEncoder().encode(str);
+  let bin = '', CH = 0x8000;
+  for(let i=0;i<bytes.length;i+=CH) bin += String.fromCharCode.apply(null, bytes.subarray(i,i+CH));
+  return btoa(bin);
+}
+function b64decode(b64){
+  const bin = atob(String(b64).replace(/\s/g,''));
+  const bytes = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+function pad(n){ return String(n).padStart(2,'0'); }
+function stamp(d){
+  d = d || new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function dayOnly(d){
+  d = d || new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+/* keeps Hangul and most unicode; strips only what breaks filesystems */
+function slugify(title){
+  let s = String(title).trim().replace(/[\/\\:*?"<>|#\[\]^]/g,' ').replace(/\s+/g,' ').trim();
+  s = s.replace(/^\.+/,'').slice(0,90).trim();
+  return (s || 'Untitled') + '.md';
+}
+function parseTags(raw){
+  return String(raw||'').split(/[,\s]+/)
+    .map(t => t.replace(/^#/,'').trim())
+    .filter(Boolean)
+    .map(t => t.replace(/\s+/g,'-'));
+}
+let toastT;
+function toast(msg){
+  const el = $('toast'); el.textContent = msg; el.classList.add('on');
+  clearTimeout(toastT); toastT = setTimeout(()=>el.classList.remove('on'), 2200);
+}
+
+/* ================= GitHub API ================= */
+const API = 'https://api.github.com';
+function ghHeaders(){
+  return {
+    'Authorization': 'Bearer ' + cfg.token,
+    'Accept': 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28'
+  };
+}
+async function gh(path, opts){
+  const res = await fetch(API + path, Object.assign({headers: ghHeaders()}, opts||{}));
+  if(res.status === 404) return {notFound:true, status:404};
+  let body = null;
+  try{ body = await res.json(); }catch(e){}
+  if(!res.ok){
+    const msg = (body && body.message) || res.statusText || ('HTTP '+res.status);
+    const err = new Error(msg); err.status = res.status; err.body = body; throw err;
+  }
+  return body;
+}
+const folder = () => (cfg.folder || 'Books').replace(/^\/+|\/+$/g,'');
+const filePath = name => `${API_PREFIX()}/${encodeURIComponent(folder())}/${encodeURIComponent(name)}`;
+function API_PREFIX(){ return `/repos/${encodeURIComponent(cfg.owner)}/${encodeURIComponent(cfg.repo)}/contents`; }
+
+async function ghListBooks(){
+  const r = await gh(`${API_PREFIX()}/${encodeURIComponent(folder())}`);
+  if(r.notFound) return [];
+  if(!Array.isArray(r)) return [];
+  return r.filter(f => f.type === 'file' && /\.md$/i.test(f.name));
+}
+async function ghGetFile(name){
+  const r = await gh(filePath(name));
+  if(r.notFound) return null;
+  return { sha:r.sha, text: b64decode(r.content || '') };
+}
+async function ghPutFile(name, text, sha, message){
+  const body = { message: message || 'book note', content: b64encode(text) };
+  if(sha) body.sha = sha;
+  return gh(filePath(name), { method:'PUT', headers: Object.assign(ghHeaders(),{'Content-Type':'application/json'}), body: JSON.stringify(body) });
+}
+
+/* ================= markdown format ================= */
+function newBookFile(title, author){
+  const fm = ['---',
+    `title: "${String(title).replace(/"/g,'\\"')}"`,
+    author ? `author: "${String(author).replace(/"/g,'\\"')}"` : null,
+    `started: ${dayOnly()}`,
+    'tags:', '  - book',
+    '---',''].filter(x=>x!==null).join('\n');
+  return `${fm}\n# ${title}\n${author ? '*'+author+'*\n' : ''}\n`;
+}
+function renderEntry(e){
+  const head = `## ${e.when}${e.page ? ' · ' + e.page : ''}`;
+  const parts = [head, ''];
+  if(e.quote)  parts.push(e.quote.split('\n').map(l => '> ' + l).join('\n'), '');
+  if(e.thought) parts.push(e.thought, '');
+  if(e.tags && e.tags.length) parts.push(e.tags.map(t => '#'+t).join(' '), '');
+  return parts.join('\n');
+}
+function appendEntry(text, e){
+  let t = text.replace(/\s+$/,'');
+  return t + '\n\n' + renderEntry(e).replace(/\s+$/,'') + '\n';
+}
+function parseBook(text){
+  const out = { title:'', author:'', entries:[] };
+  let body = text;
+  const fm = text.match(/^---\n([\s\S]*?)\n---\n?/);
+  if(fm){
+    const m1 = fm[1].match(/^title:\s*"?(.*?)"?\s*$/m);
+    const m2 = fm[1].match(/^author:\s*"?(.*?)"?\s*$/m);
+    if(m1) out.title = m1[1];
+    if(m2) out.author = m2[1];
+    body = text.slice(fm[0].length);
+  }
+  if(!out.title){ const h = body.match(/^#\s+(.+)$/m); if(h) out.title = h[1].trim(); }
+  const chunks = body.split(/\n(?=##\s)/);
+  for(const c of chunks){
+    const m = c.match(/^##\s+(\d{4}-\d{2}-\d{2}(?:\s+\d{2}:\d{2})?)(?:\s*·\s*(.+?))?\s*$/m);
+    if(!m) continue;
+    const rest = c.slice(c.indexOf('\n') + 1);
+    const lines = rest.split('\n');
+    const quote = [], thought = [], tags = [];
+    for(const ln of lines){
+      if(/^>\s?/.test(ln)) quote.push(ln.replace(/^>\s?/,''));
+      else if(/^\s*(#[^\s#]+\s*)+$/.test(ln)) (ln.match(/#[^\s#]+/g)||[]).forEach(t=>tags.push(t.slice(1)));
+      else thought.push(ln);
+    }
+    out.entries.push({
+      when: m[1], page: m[2] || '',
+      quote: quote.join('\n').trim(),
+      thought: thought.join('\n').trim(),
+      tags
+    });
+  }
+  return out;
+}
+
+/* ================= sync queue ================= */
+let syncing = false;
+async function flushQueue(){
+  if(syncing || !cfg || !queue.length || !navigator.onLine) return;
+  syncing = true; setStatus();
+  try{
+    while(queue.length){
+      const job = queue[0];
+      await commitJob(job);
+      queue.shift(); save(LS.queue, queue);
+      setStatus();
+    }
+  }catch(err){
+    console.warn('sync failed', err);
+    setStatus(err.message);
+  }finally{
+    syncing = false; setStatus();
+  }
+}
+async function commitJob(job){
+  // job = {file, title, author, entry}
+  for(let attempt=0; attempt<3; attempt++){
+    let cur = null;
+    try{ cur = await ghGetFile(job.file); }catch(e){ if(e.status !== 404) throw e; }
+    const base = cur ? cur.text : newBookFile(job.title, job.author);
+    const next = appendEntry(base, job.entry);
+    try{
+      const res = await ghPutFile(job.file, next, cur ? cur.sha : null,
+        `note: ${job.title}${job.entry.page ? ' ('+job.entry.page+')' : ''}`);
+      cache[job.file] = { sha: res.content.sha, text: next };
+      save(LS.cache, cache);
+      return;
+    }catch(e){
+      if((e.status === 409 || e.status === 422) && attempt < 2) continue; // sha race, refetch
+      throw e;
+    }
+  }
+}
+
+/* ================= status ================= */
+function setStatus(errMsg){
+  const dot = $('dot'), txt = $('statusTxt');
+  dot.className = 'dot';
+  if(!cfg){ txt.textContent=''; dot.style.display='none'; return; }
+  dot.style.display='';
+  if(!navigator.onLine){ dot.classList.add('warn'); txt.textContent = queue.length ? queue.length+' waiting' : 'offline'; return; }
+  if(syncing){ dot.classList.add('warn'); txt.textContent='saving…'; return; }
+  if(errMsg){ dot.classList.add('err'); txt.textContent='error'; return; }
+  if(queue.length){ dot.classList.add('warn'); txt.textContent = queue.length+' waiting'; return; }
+  txt.textContent='synced';
+}
+
+/* ================= routing / views ================= */
+let state = { view:'books', book:null };
+const VIEWS = ['setup','books','newbook','capture','book','search','settings'];
+function show(view, opts){
+  opts = opts || {};
+  state.view = view;
+  if(view === 'books') renderBooks();
+  VIEWS.forEach(v => $('v-'+v).classList.toggle('on', v===view));
+  const showChrome = !!cfg;
+  $('searchBtn').hidden = !showChrome || view==='setup';
+  $('gearBtn').hidden   = !showChrome || view==='setup';
+  $('backBtn').hidden   = (view==='books' || view==='setup');
+  $('fab').hidden       = (view!=='books');
+  const titles = { setup:'Set up', books:'Book Notes', newbook:'New book',
+                   capture: state.book ? state.book.title : 'New note',
+                   book: state.book ? state.book.title : 'Book',
+                   search:'Search', settings:'Settings' };
+  $('title').textContent = titles[view] || 'Book Notes';
+  window.scrollTo(0,0);
+}
+$('backBtn').onclick = () => {
+  if(state.view==='capture' && state.book) return openBook(state.book.file);
+  show('books'); renderBooks();
+};
+$('searchBtn').onclick = () => { show('search'); $('f-search').focus(); };
+$('gearBtn').onclick   = () => { renderSettings(); show('settings'); };
+$('fab').onclick       = () => { $('f-btitle').value=''; $('f-bauthor').value=''; $('newbookErr').textContent=''; show('newbook'); $('f-btitle').focus(); };
+
+/* ================= setup ================= */
+function fillSetup(){
+  if(!cfg) return;
+  $('f-owner').value = cfg.owner||''; $('f-repo').value = cfg.repo||'';
+  $('f-token').value = cfg.token||''; $('f-folder').value = cfg.folder||'Books';
+}
+$('testBtn').onclick = async () => {
+  const btn = $('testBtn'), err = $('setupErr');
+  const next = {
+    owner: $('f-owner').value.trim(),
+    repo:  $('f-repo').value.trim(),
+    token: $('f-token').value.trim(),
+    folder:($('f-folder').value.trim() || 'Books')
+  };
+  err.textContent = '';
+  if(!next.owner || !next.repo || !next.token){ err.textContent = 'Username, repository and token are all required.'; return; }
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span>';
+  const prev = cfg; cfg = next;
+  try{
+    const repo = await gh(`/repos/${encodeURIComponent(next.owner)}/${encodeURIComponent(next.repo)}`);
+    if(repo.notFound) throw new Error('Repository not found. Check the username and repository name, and that the token has access to it.');
+    if(repo.permissions && repo.permissions.push === false) throw new Error('That token can read the repository but not write to it. Set Contents to "Read and write".');
+    save(LS.cfg, cfg);
+    toast('Connected');
+    await refreshBooks(true);
+    show('books');
+  }catch(e){
+    cfg = prev;
+    err.textContent = e.message || String(e);
+  }finally{
+    btn.disabled = false; btn.textContent = 'Connect';
+  }
+};
+
+/* ================= books ================= */
+async function refreshBooks(silent){
+  if(!cfg || !navigator.onLine) return;
+  try{
+    const files = await ghListBooks();
+    const known = {};
+    for(const f of files){
+      known[f.name] = true;
+      const c = cache[f.name];
+      if(!c || c.sha !== f.sha){
+        const got = await ghGetFile(f.name);
+        if(got) cache[f.name] = { sha: got.sha, text: got.text };
+      }
+    }
+    for(const k of Object.keys(cache)) if(!known[k]) delete cache[k];
+    save(LS.cache, cache);
+    if(!silent) toast('Up to date');
+    if(state.view==='books') renderBooks();
+  }catch(e){
+    if(!silent) toast(e.message.slice(0,60));
+    console.warn(e);
+  }
+}
+function bookSummaries(){
+  const out = [];
+  for(const [file, c] of Object.entries(cache)){
+    const p = parseBook(c.text || '');
+    const pend = queue.filter(j => j.file === file).length;
+    const last = p.entries.length ? p.entries[p.entries.length-1].when : '';
+    out.push({ file, title: p.title || file.replace(/\.md$/,''), author: p.author,
+               count: p.entries.length + pend, pending: pend, last });
+  }
+  out.sort((a,b) => (b.last||'').localeCompare(a.last||''));
+  return out;
+}
+function renderBooks(){
+  const books = bookSummaries();
+  const el = $('bookList');
+  if(!books.length){
+    el.innerHTML = `<div class="empty">No books yet.<br>Tap <b>+</b> to add the one you're reading.</div>`;
+    return;
+  }
+  el.innerHTML = books.map(b => `
+    <button class="card" data-file="${esc(b.file)}">
+      <div class="booktitle">${esc(b.title)}</div>
+      <div class="bookmeta">${b.author ? esc(b.author)+' · ' : ''}${b.count} note${b.count===1?'':'s'}${b.pending?' · <span style="color:var(--accent)">'+b.pending+' waiting</span>':''}${b.last?' · '+esc(b.last.slice(0,10)):''}</div>
+    </button>`).join('');
+  el.querySelectorAll('[data-file]').forEach(n => n.onclick = () => openCapture(n.dataset.file));
+}
+
+/* ================= new book ================= */
+$('createBookBtn').onclick = async () => {
+  const title = $('f-btitle').value.trim();
+  const author = $('f-bauthor').value.trim();
+  const err = $('newbookErr'); err.textContent='';
+  if(!title){ err.textContent = 'A title is needed.'; return; }
+  const file = slugify(title);
+  if(cache[file]){ err.textContent = 'A book with that title already exists.'; return; }
+  cache[file] = { sha:null, text: newBookFile(title, author) };
+  save(LS.cache, cache);
+  const btn = $('createBookBtn'); btn.disabled = true;
+  try{
+    if(navigator.onLine){
+      const res = await ghPutFile(file, cache[file].text, null, 'add book: ' + title);
+      cache[file].sha = res.content.sha; save(LS.cache, cache);
+    }
+    openCapture(file);
+  }catch(e){
+    err.textContent = e.message;
+    delete cache[file]; save(LS.cache, cache);
+  }finally{ btn.disabled = false; }
+};
+
+/* ================= capture ================= */
+function openCapture(file){
+  const c = cache[file]; if(!c) return;
+  const p = parseBook(c.text||'');
+  state.book = { file, title: p.title || file.replace(/\.md$/,''), author: p.author };
+  ['f-quote','f-thought','f-page','f-tags'].forEach(id => $(id).value = '');
+  $('capErr').textContent = '';
+  renderTagSuggest();
+  show('capture');
+  $('f-quote').focus();
+}
+function knownTags(){
+  const set = new Set();
+  for(const c of Object.values(cache)) parseBook(c.text||'').entries.forEach(e => e.tags.forEach(t => set.add(t)));
+  return [...set].sort();
+}
+function renderTagSuggest(){
+  const tags = knownTags().slice(0,14);
+  $('tagSuggest').innerHTML = tags.map(t => `<span class="tag" data-t="${esc(t)}">#${esc(t)}</span>`).join('');
+  $('tagSuggest').querySelectorAll('[data-t]').forEach(n => n.onclick = () => {
+    const inp = $('f-tags');
+    const cur = parseTags(inp.value);
+    if(!cur.includes(n.dataset.t)) cur.push(n.dataset.t);
+    inp.value = cur.join(', ');
+  });
+}
+$('saveBtn').onclick = async () => {
+  const quote = $('f-quote').value.trim();
+  const thought = $('f-thought').value.trim();
+  const page = $('f-page').value.trim();
+  const tags = parseTags($('f-tags').value);
+  const err = $('capErr'); err.textContent='';
+  if(!quote && !thought){ err.textContent = 'Write a quote or a thought — one of the two.'; return; }
+  if(!state.book) return;
+
+  const entry = { when: stamp(), page, quote, thought, tags };
+  const job = { file: state.book.file, title: state.book.title, author: state.book.author, entry };
+
+  // optimistic local append so it shows up immediately, online or not
+  const c = cache[job.file] || { sha:null, text: newBookFile(job.title, job.author) };
+  c.text = appendEntry(c.text, entry);
+  cache[job.file] = c; save(LS.cache, cache);
+
+  queue.push(job); save(LS.queue, queue);
+  ['f-quote','f-thought','f-page','f-tags'].forEach(id => $(id).value = '');
+  toast(navigator.onLine ? 'Saved' : 'Saved — will sync when online');
+  $('f-quote').focus();
+  setStatus();
+  flushQueue();
+};
+
+/* ================= book detail ================= */
+function openBook(file){
+  const c = cache[file]; if(!c) return;
+  const p = parseBook(c.text||'');
+  state.book = { file, title: p.title || file.replace(/\.md$/,''), author: p.author };
+  $('bookHead').innerHTML = `
+    <div style="margin-bottom:18px">
+      ${p.author ? `<div class="muted small" style="margin-bottom:10px">${esc(p.author)}</div>` : ''}
+      <button class="btn sm" id="addHere">+ New note</button>
+      <span class="muted small" style="margin-left:10px">${p.entries.length} note${p.entries.length===1?'':'s'}</span>
+    </div>`;
+  const list = p.entries.slice().reverse();
+  $('entryList').innerHTML = list.length
+    ? list.map(e => entryHTML(e)).join('')
+    : `<div class="empty">Nothing captured from this book yet.</div>`;
+  $('addHere').onclick = () => openCapture(file);
+  show('book');
+}
+function entryHTML(e, bookTitle){
+  return `<div class="entry">
+    ${bookTitle ? `<div class="srcbook">${esc(bookTitle)}</div>` : ''}
+    <div class="when">${esc(e.when)}${e.page ? ' · ' + esc(e.page) : ''}</div>
+    ${e.quote ? `<blockquote>${esc(e.quote)}</blockquote>` : ''}
+    ${e.thought ? `<div class="thought">${esc(e.thought)}</div>` : ''}
+    ${e.tags.length ? `<div class="tags">${e.tags.map(t=>`<span class="pill">#${esc(t)}</span>`).join('')}</div>` : ''}
+  </div>`;
+}
+
+/* ================= search ================= */
+let searchT;
+$('f-search').oninput = () => { clearTimeout(searchT); searchT = setTimeout(runSearch, 140); };
+function runSearch(){
+  const q = $('f-search').value.trim().toLowerCase();
+  const out = $('searchResults');
+  if(!q){ out.innerHTML = ''; return; }
+  const tagMode = q.startsWith('#');
+  const needle = tagMode ? q.slice(1) : q;
+  const hits = [];
+  for(const [file,c] of Object.entries(cache)){
+    const p = parseBook(c.text||'');
+    const bt = p.title || file.replace(/\.md$/,'');
+    for(const e of p.entries){
+      const match = tagMode
+        ? e.tags.some(t => t.toLowerCase().includes(needle))
+        : (e.quote+' '+e.thought+' '+e.tags.join(' ')+' '+bt).toLowerCase().includes(needle);
+      if(match) hits.push({e, bt});
+    }
+  }
+  hits.sort((a,b) => (b.e.when||'').localeCompare(a.e.when||''));
+  out.innerHTML = hits.length
+    ? `<div class="muted small" style="margin-bottom:14px">${hits.length} result${hits.length===1?'':'s'}</div>` +
+      hits.map(h => entryHTML(h.e, h.bt)).join('')
+    : `<div class="empty">Nothing matches “${esc($('f-search').value.trim())}”.</div>`;
+}
+
+/* ================= settings ================= */
+function renderSettings(){
+  $('s-repo').textContent = cfg ? `${cfg.owner}/${cfg.repo}` : '—';
+  $('s-folder').textContent = cfg ? folder() + '/' : '—';
+  $('s-queue').innerHTML = queue.length
+    ? `<div class="card" style="margin-bottom:16px"><div class="small muted">Waiting to sync</div>
+       <div style="font-weight:620;margin-top:2px">${queue.length} note${queue.length===1?'':'s'}</div></div>`
+    : '';
+}
+$('refreshBtn').onclick = async () => { await flushQueue(); await refreshBooks(false); renderSettings(); };
+$('editConnBtn').onclick = () => { fillSetup(); $('setupErr').textContent=''; show('setup'); };
+$('logoutBtn').onclick = () => {
+  if(queue.length && !confirm(queue.length + ' note(s) have not synced yet. Forget the token anyway?')) return;
+  localStorage.removeItem(LS.cfg);
+  cfg = null; show('setup'); fillSetup(); setStatus();
+};
+
+/* ================= boot ================= */
+window.addEventListener('online',  () => { setStatus(); flushQueue(); });
+window.addEventListener('offline', () => setStatus());
+document.addEventListener('visibilitychange', () => { if(!document.hidden) flushQueue(); });
+
+(function boot(){
+  setStatus();
+  if(!cfg){ show('setup'); return; }
+  renderBooks(); show('books');
+  flushQueue().then(() => refreshBooks(true));
+})();
+</script>
+</body>
+</html>
