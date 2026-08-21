@@ -271,6 +271,14 @@ h2.sec{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--
   </div>
   <div id="s-queue"></div>
   <button class="btn ghost" id="refreshBtn" style="margin-bottom:10px">Refresh from GitHub</button>
+  <button class="btn ghost" id="copyTokenBtn" style="margin-bottom:6px">Copy token for another device</button>
+  <p class="hint" style="margin:0 0 16px">
+    Setting up your phone? Tap this, then paste into the app there.
+    <a href="#" id="revealTokenBtn">Show it instead</a>
+  </p>
+  <div id="tokenReveal" hidden style="margin-bottom:16px">
+    <div class="card" style="word-break:break-all;font-family:ui-monospace,Menlo,monospace;font-size:12.5px" id="tokenText"></div>
+  </div>
   <button class="btn ghost" id="editConnBtn" style="margin-bottom:10px">Edit connection</button>
   <button class="btn ghost" id="logoutBtn" style="color:var(--danger)">Forget token on this device</button>
   <p class="hint" style="margin-top:18px">
@@ -740,6 +748,38 @@ function renderSettings(){
     : '';
 }
 $('refreshBtn').onclick = async () => { await flushQueue(); await refreshBooks(false); renderSettings(); };
+function copyText(text){
+  if(navigator.clipboard && window.isSecureContext){
+    return navigator.clipboard.writeText(text);
+  }
+  return new Promise((res, rej) => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    let ok = false;
+    try{ ok = document.execCommand('copy'); }catch(e){}
+    ta.remove();
+    ok ? res() : rej(new Error('copy blocked'));
+  });
+}
+$('copyTokenBtn').onclick = async () => {
+  if(!cfg || !cfg.token){ toast('No token stored'); return; }
+  try{
+    await copyText(cfg.token);
+    toast('Token copied — paste it on your phone');
+  }catch(e){
+    $('tokenReveal').hidden = false;
+    $('tokenText').textContent = cfg.token;
+    toast('Copy blocked — shown below instead');
+  }
+};
+$('revealTokenBtn').onclick = (e) => {
+  e.preventDefault();
+  const box = $('tokenReveal');
+  box.hidden = !box.hidden;
+  if(!box.hidden) $('tokenText').textContent = (cfg && cfg.token) || '—';
+};
 $('editConnBtn').onclick = () => { fillSetup(); $('setupErr').textContent=''; show('setup'); };
 $('logoutBtn').onclick = () => {
   if(queue.length && !confirm(queue.length + ' note(s) have not synced yet. Forget the token anyway?')) return;
